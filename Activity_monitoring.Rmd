@@ -1,0 +1,107 @@
+---
+title: "Peer Graded"
+author: "Redson"
+date: "2023-11-11"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+**Loading the packages required**
+```{r}
+library(data.table)
+library(timeDate)
+library(tidyverse)
+library(lattice)
+```
+
+**Loading the data**
+```{r}
+data<-read.csv("./activity.csv")
+```
+
+**Exploring the data**
+```{r}
+summary(data)
+head(data)
+```
+
+# Step 1: Histogram of the total number of steps taken each day
+```{r}
+total_steps_per_day <- data %>%
+  group_by(date) %>%
+  summarise(total_steps = sum(steps, na.rm = TRUE))
+```
+
+```{r}
+# Plot histogram
+hist(total_steps_per_day$total_steps, main = "Histogram of Total Steps per Day", xlab = "Total Steps")
+```
+
+```{r}
+# Step 2: Mean and median number of steps taken each day
+mean_steps_per_day <- mean(total_steps_per_day$total_steps, na.rm = TRUE)
+median_steps_per_day <- median(total_steps_per_day$total_steps, na.rm = TRUE)
+```
+
+```{r}
+# Print mean and median
+cat("Mean steps per day:", mean_steps_per_day, "\n")
+cat("Median steps per day:", median_steps_per_day, "\n")
+```
+# Step 3: Time series plot of the average number of steps taken
+```{r}
+average_steps_per_interval <- data %>%
+  group_by(interval) %>%
+  summarise(average_steps = mean(steps, na.rm = TRUE))
+```
+
+# Plot time series
+```{r}
+plot(average_steps_per_interval$interval, average_steps_per_interval$average_steps, type = "l", 
+     main = "Time Series Plot of Average Steps per Interval", xlab = "Interval", ylab = "Average Steps")
+```
+
+# Step 4: The 5-minute interval that, on average, contains the maximum number of steps
+```{r}
+max_interval <- average_steps_per_interval$interval[which.max(average_steps_per_interval$average_steps)]
+cat("Interval with the maximum average steps:", max_interval, "\n")
+```
+# Step 5: Code to describe and show a strategy for imputing missing data
+```{r}
+mean_steps <- mean(data$steps, na.rm = TRUE)
+data$steps[is.na(data$steps)] <- mean_steps
+```
+
+# Step 6: Histogram of the total number of steps taken each day after missing values are imputed
+```{r}
+total_steps_per_day_imputed <- data %>%
+  group_by(date) %>%
+  summarise(total_steps = sum(steps))
+```
+
+# Plot histogram
+```{r}
+hist(total_steps_per_day_imputed$total_steps, main = "Histogram of Total Steps per Day (Imputed)", xlab = "Total Steps")
+```
+
+# Step 7: Panel plot comparing the average number of steps taken per 5-minute interval across weekdays and weekends
+```{r}
+data$day <- weekdays(as.Date(data$date))
+data$day_type <- ifelse(data$day %in% c("Saturday", "Sunday"), "Weekend", "Weekday")
+
+average_steps_by_day_type <- data %>%
+  group_by(interval, day_type) %>%
+  summarise(average_steps = mean(steps))
+```
+# Plot panel plot
+```{r}
+ggplot(average_steps_by_day_type, aes(x = interval, y = average_steps, color = day_type)) +
+  geom_line() +
+  labs(title = "Average Steps per 5-Minute Interval Across Weekdays and Weekends", x = "Interval", y = "Average Steps") +
+  theme_minimal()
+```
+
